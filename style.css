@@ -1,0 +1,178 @@
+/* 全局样式 */
+body {
+  font-family: 'Microsoft YaHei', sans-serif;
+  margin: 0;
+  padding: 16px;
+  min-width: 300px;
+  background-color: #f5f5f5;
+}
+
+/* 标题样式 */
+.music-item h3 {
+  font-size: 20px;
+  color: #1a1a1a;
+  margin: 0 0 12px 0;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #4CAF50;
+  position: relative;
+}
+
+.music-item h3::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 50px;
+  height: 2px;
+  background: linear-gradient(90deg, #4CAF50, #81C784);
+}
+
+/* 所听即所得标语 */
+/* 所听即所得标语 */
+.slogan {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 0 0;
+  padding: 18px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  background: none;
+  box-shadow: none;
+  background-image: linear-gradient(90deg, #5c8392, #81C784, #344e35);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  transition: transform 0.3s ease, opacity 0.3s ease; /* 添加悬停动效 */
+}
+
+/* 鼠标悬停效果 */
+.slogan:hover {
+  transform: scale(1.1); /* 放大效果 */
+  opacity: 0.9; /* 透明度变化 */
+}
+
+
+/* 所听即所得标语 */
+/* 所听即所得标语 */
+.slogan_bott {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 600;
+  margin: 0 0 0 0;
+  padding: 0 0 0 0;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  background: none;
+  box-shadow: none;
+  background-image: linear-gradient(90deg, #5c8392, #81C784, #344e35);
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  transition: transform 0.3s ease, opacity 0.3s ease; /* 添加悬停动效 */
+}
+
+/* 鼠标悬停效果 */
+.slogan_bott:hover {
+  transform: scale(1.1); /* 放大效果 */
+  opacity: 0.9; /* 透明度变化 */
+}
+
+
+@keyframes shine {
+  to {
+    background-position: 200% center;
+  }
+}
+
+/* 音乐项样式 */
+.music-item {
+  background: white;
+  padding: 16px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.music-item h3 {
+  font-size: 18px;
+  color: #555165;
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  text-align: center;
+}
+
+.music-item h3::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 1px;
+  background: linear-gradient(90deg, #4CAF50, #81C784);
+}
+
+/* 按钮样式 */
+.play-btn, .download-btn {
+  padding: 8px 16px;
+  margin-right: 8px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.play-btn {
+  background: linear-gradient(135deg, #43A047, #66BB6A, #81C784);
+  color: white;
+  box-shadow: 0 2px 8px rgba(76,175,80,0.3);
+}
+
+.download-btn {
+  background: linear-gradient(135deg, #4a8dc8, #42A5F5, #64B5F6);
+  color: white;
+  box-shadow: 0 2px 8px rgba(33,150,243,0.3);
+}
+
+.play-btn:hover, .download-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.play-btn:active, .download-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 进度和来源信息样式 */
+.music-item p {
+  margin: 8px 0;
+  color: #666;
+}
+
+.source-link {
+  font-size: 12px;
+  color: #999;
+}
+
+.music-src {
+  word-break: break-all;
+  display: inline-block;
+}
+
+/* 无音乐提示样式 */
+.no-music {
+  text-align: center;
+  padding: 20px;
+  color: #999;
+  font-size: 16px;
+  background: #fff;
+  margin-bottom: 14px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
