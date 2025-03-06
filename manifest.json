@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "音乐素材助手",
-  "version": "2.2",
+  "version": "2.5.3",
   "description": "下载音乐素材",
   "permissions": [
     "activeTab",

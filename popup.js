@@ -19,17 +19,6 @@ function getCurrentTabMusicInfo() {
       chrome.tabs.sendMessage(tabs[0].id, {action: 'detectMusic'}, function(response) {
         if (chrome.runtime.lastError) {
           // 如果出现错误，尝试从本地存储加载上一次的音乐信息
-          // 从本地存储加载上一次的音乐信息
-          function loadLastMusicInfo() {
-            chrome.storage.local.get(['lastMusicInfo'], function(result) {
-              if (result.lastMusicInfo) {
-                updateMusicInfo(result.lastMusicInfo);
-              } else {
-                const musicInfoDiv = document.getElementById('musicInfo');
-                musicInfoDiv.innerHTML = '<div class="no-music">无法检测音乐：请刷新页面或重新打开扩展</div>';
-              }
-            });
-          }
           retryCount++;
           setTimeout(tryDetectMusic, 1000);
           return;
@@ -44,6 +33,18 @@ function getCurrentTabMusicInfo() {
     }
     
     tryDetectMusic();
+  });
+}
+
+// 从本地存储加载上一次的音乐信息
+function loadLastMusicInfo() {
+  chrome.storage.local.get(['lastMusicInfo'], function(result) {
+    if (result.lastMusicInfo) {
+      updateMusicInfo(result.lastMusicInfo);
+    } else {
+      const musicInfoDiv = document.getElementById('musicInfo');
+      musicInfoDiv.innerHTML = '<div class="no-music">无法检测音乐：请刷新页面或重新打开扩展</div>';
+    }
   });
 }
 
