@@ -1,37 +1,50 @@
 console.log("Content script injected successfully!");
 
-
-
 // 存储检测到的音频请求
 let detectedAudioRequests = new Set();
 
+// 音频相关的MIME类型
+const audioMimeTypes = [
+  'audio/',
+  'audio/mpeg',
+  'audio/mp3',
+  'audio/mp4',
+  'audio/wav',
+  'audio/ogg',
+  'audio/aac',
+  'audio/flac',
+  'audio/x-m4a',
+  'audio/webm',
+  'audio/x-matroska',
+  'application/octet-stream',
+  'application/x-mpegURL',
+  'application/vnd.apple.mpegURL'
+];
+
 // 拦截XHR请求
 const originalXHROpen = XMLHttpRequest.prototype.open;
-
-console.log(XMLHttpRequest.prototype.open === originalXHROpen);
-
 XMLHttpRequest.prototype.open = function(method, url) {
   const xhr = this;
-
-  console.log("hello worodsasdf")
+  console.log("拦截到XHR请求:", url);
   
   xhr.addEventListener('load', function() {
-    const contentType = xhr.getResponseHeader('content-type');
-    const status = xhr.status;
-    // 增加对206状态码和audio/mp4类型的支持
-    if ((status === 200 || status === 206) && 
-        (isAudioUrl(url) || 
-         (contentType && (
-           contentType.includes('audio') || 
-           contentType.includes('media') || 
-           contentType.includes('stream') ||
-           contentType.includes('mp4') ||
-           contentType.includes('application/octet-stream')
-         ))
-        )) {
-      console.log('检测到音频请求:', url);
-      console.log('Content-Type:', contentType);
-      detectedAudioRequests.add(url);
+    try {
+      const contentType = xhr.getResponseHeader('content-type');
+      const status = xhr.status;
+      console.log("XHR响应状态:", status, "Content-Type:", contentType);
+      
+      if ((status === 200 || status === 206) && 
+          (isAudioUrl(url) || 
+           (contentType && (
+             audioMimeTypes.some(type => contentType.toLowerCase().includes(type.toLowerCase()))
+           ))
+          )) {
+        console.log('XHR检测到音频请求:', url);
+        detectedAudioRequests.add(url);
+        notifyBackgroundScript(url, contentType);
+      }
+    } catch (error) {
+      console.error('处理XHR响应时出错:', error);
     }
   });
   return originalXHROpen.apply(this, arguments);
@@ -39,93 +52,64 @@ XMLHttpRequest.prototype.open = function(method, url) {
 
 // 拦截Fetch请求
 const originalFetch = window.fetch;
-window.fetch = function(url, options) {
+window.fetch = function(input, init) {
+  const url = typeof input === 'string' ? input : input.url;
+  console.log("拦截到Fetch请求:", url);
+  
   const promise = originalFetch.apply(this, arguments);
   promise.then(response => {
-    const contentType = response.headers.get('content-type');
-    const status = response.status;
-    // 增加对206状态码和audio/mp4类型的支持
-    if ((status === 200 || status === 206) && 
-        (isAudioUrl(url.toString()) || 
-         (contentType && (
-           contentType.includes('audio') || 
-           contentType.includes('media') || 
-           contentType.includes('stream') ||
-           contentType.includes('audio/mp4') ||
-           contentType.includes('application/octet-stream')
-         ))
-        )) {
-      console.log('检测到音频请求:', url.toString());
-      console.log('Content-Type:', contentType);
-      detectedAudioRequests.add(url.toString());
+    try {
+      const contentType = response.headers.get('content-type');
+      const status = response.status;
+      console.log("Fetch响应状态:", status, "Content-Type:", contentType);
+      
+      if ((status === 200 || status === 206) && 
+          (isAudioUrl(url) || 
+           (contentType && (
+             audioMimeTypes.some(type => contentType.toLowerCase().includes(type.toLowerCase()))
+           ))
+          )) {
+        console.log('Fetch检测到音频请求:', url);
+        detectedAudioRequests.add(url);
+        notifyBackgroundScript(url, contentType);
+      }
+    } catch (error) {
+      console.error('处理Fetch响应时出错:', error);
     }
   });
   return promise;
 };
 
+// 通知background script
+function notifyBackgroundScript(url, contentType) {
+  chrome.runtime.sendMessage({
+    action: 'audioDetected',
+    audioUrl: url,
+    contentType: contentType
+  }).catch(error => {
+    console.error('发送消息到background script失败:', error);
+  });
+}
+
 // 判断URL是否为音频链接
 function isAudioUrl(url) {
-  const audioExtensions = ['.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac', '.wma', '.ape', '.opus', '.mid', '.midi', '.amr', '.m4r', '.ac3', '.dsf', '.dff'];
-  const audioKeywords = ['audio', 'music', 'media', 'stream', 'jdyyaac', 'song', 'musicfile'];
+  const audioExtensions = [
+    '.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac', '.wma',
+    '.ape', '.opus', '.mid', '.midi', '.amr', '.m4r', '.ac3',
+    '.dsf', '.dff', '.webm', '.mka', '.m3u8', '.ts'
+  ];
   const urlLower = url.toLowerCase();
-
-  console.log('正在检查URL:', urlLower);
   
-  // 特殊处理网易云音乐的URL模式
-  if (urlLower.includes('music.163.com') || urlLower.includes('.music.126.net')) {
-    console.log('检测到网易云音乐URL:', urlLower);
-    const isMatch = urlLower.includes('/weapi/song/enhance/player/url') ||
-           urlLower.includes('/api/song/enhance/player/url') ||
-           urlLower.includes('/song/url') ||
-           urlLower.includes('/weapi/song/url') ||
-           urlLower.includes('/api/cloud/get/byid') ||
-           urlLower.includes('/eapi/song/enhance/player/url') ||
-           urlLower.includes('/eapi/song/url') ||
-           urlLower.includes('/eapi/v1/song/url') ||
-           urlLower.includes('/eapi/v3/song/url') ||
-           urlLower.includes('/neapi/song/url') ||
-           urlLower.includes('/neapi/player/url') ||
-           urlLower.includes('.m4a') ||
-           urlLower.includes('m7c6') ||
-           urlLower.includes('m704') ||
-           urlLower.includes('m8c6') ||
-           urlLower.includes('m804') ||
-           urlLower.includes('m8') ||
-           urlLower.includes('m7') ||
-           urlLower.includes('m9') ||
-           urlLower.includes('m10') ||
-           urlLower.includes('/song/media/outer/url') ||
-           urlLower.includes('/song/enhance/download/url') ||
-           urlLower.includes('/song/enhance/player/url/v1') ||
-           urlLower.includes('/song/enhance/player/url/v2') ||
-           urlLower.includes('jdyyaac') ||
-           urlLower.includes('/weapi/song/download/url') ||
-           urlLower.includes('/api/song/download/url') ||
-           urlLower.includes('/eapi/song/download/url') ||
-           urlLower.includes('/neapi/song/download/url') ||
-           urlLower.includes('/song/download/url') ||
-           (urlLower.includes('.m4a') && (urlLower.includes('authsecret=') || urlLower.includes('vuutv=')));
-    console.log('网易云音乐URL匹配结果:', isMatch);
-    return isMatch;
-  }
-  
-  const isAudioExtension = audioExtensions.some(ext => {
-    const hasExt = urlLower.includes(ext);
-    if (hasExt) console.log('匹配到音频扩展名:', ext);
-    return hasExt;
-  });
-
-  console.log('检查音频关键词...');
-  const hasAudioKeyword = audioKeywords.some(keyword => {
-    const hasKeyword = urlLower.includes(keyword);
-    if (hasKeyword) console.log('匹配到音频关键词:', keyword);
-    return hasKeyword;
-  });
-  
-  const result = isAudioExtension || hasAudioKeyword;
-  console.log('URL检查结果:', result ? '是音频链接' : '不是音频链接');
-  return result;
+  return audioExtensions.some(ext => urlLower.includes(ext));
 }
+
+// 监听来自background script的消息
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'newAudioDetected') {
+    console.log('收到新的音频URL:', message.audioUrl);
+    detectedAudioRequests.add(message.audioUrl);
+  }
+});
 
 // 监听页面中的音频元素
 function detectMusic() {

@@ -7,8 +7,23 @@
     "activeTab",
     "scripting",
     "downloads",
-    "storage"
+    "storage",
+    "webRequest",
+    "webNavigation"
   ],
+  "host_permissions": [
+    "*://*.music.163.com/*",
+    "*://*.music.126.net/*",
+    "*://*.qq.com/*",
+    "*://*.xiami.com/*",
+    "*://*.kugou.com/*",
+    "*://*.kuwo.cn/*",
+    "*://*.bilibili.com/*",
+    "*://*.youtube.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -18,7 +33,16 @@
     }
   },
   "content_scripts": [{
-    "matches": ["<all_urls>"],
+    "matches": [
+      "*://*.music.163.com/*",
+      "*://*.music.126.net/*",
+      "*://*.qq.com/*",
+      "*://*.xiami.com/*",
+      "*://*.kugou.com/*",
+      "*://*.kuwo.cn/*",
+      "*://*.bilibili.com/*",
+      "*://*.youtube.com/*"
+    ],
     "js": ["content.js"]
   }],
   "icons": {
