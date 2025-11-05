@@ -3,8 +3,6 @@ console.log(" ========= background ..")
 // 存储检测到的音频请求
 let detectedAudioRequests = [];
 
-
-
 // 音频相关的 MIME 类型和文件扩展名
 // 添加更多音频相关的MIME类型
 const audioMimeTypes = [
@@ -21,14 +19,30 @@ const audioMimeTypes = [
   'audio/x-matroska',
   'application/octet-stream',
   'application/x-mpegURL',
-  'application/vnd.apple.mpegURL'
+  'application/vnd.apple.mpegURL',
+  // 添加更多常见的音频MIME类型
+  'audio/x-wav',
+  'audio/x-aiff',
+  'audio/basic',
+  'audio/L24',
+  'audio/mid',
+  'audio/midi',
+  'audio/x-midi',
+  'audio/mp4a-latm',
+  'audio/x-ms-wma',
+  'audio/vnd.rn-realaudio',
+  'audio/vnd.wave'
 ];
 
 // 扩展音频文件扩展名列表
 const audioExtensions = [
   '.mp3', '.wav', '.ogg', '.m4a', '.aac', '.flac', '.wma',
   '.ape', '.opus', '.mid', '.midi', '.amr', '.m4r', '.ac3',
-  '.dsf', '.dff', '.webm', '.mka', '.m3u8', '.ts'
+  '.dsf', '.dff', '.webm', '.mka', '.m3u8', '.ts',
+  // 添加更多音频文件扩展名
+  '.aiff', '.aifc', '.au', '.ra', '.rm', '.ram', '.pls',
+  '.cda', '.raw', '.vox', '.tta', '.m4b', '.m4p', '.3gp',
+  '.snd', '.voc', '.xm', '.mod'
 ];
 
 // 判断URL是否为音频链接
@@ -45,6 +59,11 @@ function isAudioUrl(url) {
            urlLower.includes('.aac') ||
            urlLower.includes('.flac')
   }
+
+  // 特殊处理QQ音乐的URL模式
+  if (urlLower.includes('qq.com') || urlLower.includes('qqmusic.qq.com')) {
+    return true;
+  }
   
   // 检查文件扩展名
   return audioExtensions.some(ext => urlLower.includes(ext));
@@ -54,20 +73,29 @@ function isAudioUrl(url) {
 chrome.webRequest.onHeadersReceived.addListener(
   function(details) {
     try {
-      // 检查响应头中的Content-Type
+      // 检查响应头中的Content-Type和Content-Disposition
       const contentTypeHeader = details.responseHeaders?.find(
         header => header.name.toLowerCase() === 'content-type'
       );
+      const contentDispositionHeader = details.responseHeaders?.find(
+        header => header.name.toLowerCase() === 'content-disposition'
+      );
       
       const contentType = contentTypeHeader?.value.toLowerCase() || '';
+      const contentDisposition = contentDispositionHeader?.value.toLowerCase() || '';
       
       // 检查是否为音频内容类型
       const isAudioContentType = audioMimeTypes.some(type => contentType.includes(type));
       
-      // 如果是音频内容类型或URL匹配音频模式
-      if (isAudioContentType || isAudioUrl(details.url)) {
+      // 检查Content-Disposition中是否包含音频文件扩展名
+      const hasAudioExtension = audioExtensions.some(ext => contentDisposition.includes(ext));
+      
+      // 如果是音频内容类型、URL匹配音频模式或Content-Disposition包含音频扩展名
+      if (isAudioContentType || isAudioUrl(details.url) || hasAudioExtension) {
         console.log('检测到音频请求:', details.url);
         console.log('Content-Type:', contentType);
+        console.log('Content-Disposition:', contentDisposition);
+        
         // 将新的音频URL添加到数组开头
         if (!detectedAudioRequests.includes(details.url)) {
           detectedAudioRequests.unshift(details.url);
@@ -78,7 +106,8 @@ chrome.webRequest.onHeadersReceived.addListener(
           chrome.tabs.sendMessage(details.tabId, {
             action: 'newAudioDetected',
             audioUrl: details.url,
-            contentType: contentType
+            contentType: contentType,
+            contentDisposition: contentDisposition
           }).catch(error => {
             console.error('发送消息到content script失败:', error);
           });
